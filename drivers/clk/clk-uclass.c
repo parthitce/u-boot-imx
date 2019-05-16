@@ -379,6 +379,21 @@ ulong clk_get_rate(struct clk *clk)
 	return ops->get_rate(clk);
 }
 
+struct clk *clk_get_parent(struct clk *clk)
+{
+	struct udevice *pdev;
+	struct clk *pclk;
+
+	debug("%s(clk=%p)\n", __func__, clk);
+
+	pdev = dev_get_parent(clk->dev);
+	pclk = (struct clk *)dev_get_driver_data(pdev);
+	if (!pclk)
+		return ERR_PTR(-ENODEV);
+
+	return pclk;
+}
+
 ulong clk_set_rate(struct clk *clk, ulong rate)
 {
 	const struct clk_ops *ops = clk_dev_ops(clk->dev);
