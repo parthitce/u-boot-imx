@@ -1,0 +1,83 @@
+Introduction:
+=============
+
+This documentation entry describes the Common Clock Framework [CCF]
+port from Linux kernel (5.0-rc3) to U-Boot.
+
+This code is supposed to bring CCF to IMX based devices (imx6q, imx7
+imx8). Moreover, it also provides some common clock code, which would
+allow easy porting of CCF Linux code to other platforms.
+
+Design decisions:
+=================
+
+* U-boot's DM for clk differs from Linux CCF. The most notably difference
+  is the lack of support for hierarchical clocks and "clock as a manager
+  driver" (single clock DTS node acts as a starting point for all other
+  clocks).
+
+* The clk_get_rate() caches the previously read data if CLK_GET_RATE_NOCACHE
+  is not set (no need for recursive access).
+
+* On purpose the "manager" clk driver (clk-imx6q.c) is not using large
+  table to store pointers to clocks - e.g. clk[IMX6QDL_CLK_USDHC2_SEL] = ....
+  Instead we use udevice's linked list for the same class (UCLASS_CLK).
+
+  Rationale:
+  ----------
+    When porting the code as is from Linux, one would need ~1KiB of RAM to
+    store it. This is way too much if we do plan to use this driver in SPL.
+
+* The "central" structure of this patch series is struct udevice and its
+  driver_data field contains the struct clk pointer (to the originally created
+  one).
+
+* Up till now U-boot's driver model's CLK operates on udevice (main access to
+  clock is by udevice ops)
+  In the CCF the access to struct clk (comprising pointer to *dev) is
+  possible via dev_get_driver_data()
+
+  Storing back pointer (from udevice to struct clk) as driver_data is a
+  convention for CCF.
+
+* I could use *private_alloc_size to allocate driver's 'private"
+  structures (dev->priv) for e.g. divider (struct clk_divider *divider)
+  for IMX6Q clock, but this would change the original structure of the CCF code.
+
+    Question:
+    ---------
+
+    Would it be better to use private_alloc_size (and dev->private) or stay with
+    driver_data to store struct clk pointer?
+
+    The former requires some rewritting in CCF original code (to remove
+    (c)malloc, etc), but comply with u-boot DM. The latter allows re-using the
+    CCF code as is, but introduces some convention special for CCF (I'm not
+    sure thought if dev->priv is NOT another convention as well).
+
+    This port uses the former approach with driver_data storing pointer to
+    struct clk.
+
+* I've added the clk_get_parent(), which reads parent's dev->driver_data to
+  provide parent's struct clk pointer. This seems the easiest way to get
+  child/parent relationship for struct clk in U-boot's udevice
+  based clocks.
+
+* For tests I had to "emulate" CCF code structure to test functionality of
+  clk_get_parent_rate() and clk_get_by_id(). Those functions will not work
+  properly with "standard" (i.e. non CCF) clock setup (with not set
+  dev->driver_data to struct clk).
+
+* Linux's CCF 'struct clk_core' corresponds to u-boot's udevice in 'struct clk'.
+  Clock IP block agnostic flags from 'struct clk_core' (e.g. NOCACHE) have been
+  moved from this struct one level up to 'struct clk'.
+
+To do:
+------
+
+* Use of OF_PLATDATA in the SPL setup for CCF - as it is now - the SPL grows
+  considerably and using CCF in boards with tiny resources (OCRAM) is
+  problematic.
+
+* On demand port other parts of CCF to U-Boot - as now only features _really_
+  needed by DM/DTS converted drivers are used.
