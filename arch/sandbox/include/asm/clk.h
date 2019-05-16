@@ -63,6 +63,14 @@ int sandbox_clk_query_enable(struct udevice *dev, int id);
  */
 int sandbox_clk_test_get(struct udevice *dev);
 /**
+ * sandbox_clk_test_get_by_id - Ask the sandbox clock test device to request its
+ * clocks by using clock id.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	0 if OK, or a negative error code.
+ */
+int sandbox_clk_test_get_by_id(struct udevice *dev);
+/**
  * sandbox_clk_test_get_bulk - Ask the sandbox clock test device to request its
  * clocks with the bulk clk API.
  *

@@ -120,8 +120,9 @@ static int dm_test_clk(struct unit_test_state *uts)
 	ut_asserteq(0, sandbox_clk_query_enable(dev_clk, SANDBOX_CLK_ID_SPI));
 	ut_asserteq(0, sandbox_clk_query_enable(dev_clk, SANDBOX_CLK_ID_I2C));
 
-	ut_assertok(sandbox_clk_test_free(dev_test));
+	ut_asserteq(0, sandbox_clk_test_get_by_id(dev_test));
 
+	ut_assertok(sandbox_clk_test_free(dev_test));
 	return 0;
 }
 DM_TEST(dm_test_clk, DM_TESTF_SCAN_FDT);

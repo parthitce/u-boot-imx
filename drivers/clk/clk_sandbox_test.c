@@ -34,6 +34,29 @@ int sandbox_clk_test_get(struct udevice *dev)
 	return 0;
 }
 
+int sandbox_clk_test_get_by_id(struct udevice *dev)
+{
+	struct sandbox_clk_test *sbct = dev_get_priv(dev);
+	struct clk *clkp, *i2c_clk;
+	ulong driver_data_bkp;
+	const int id = 24;
+	int ret, id_bkp;
+
+	i2c_clk = &sbct->clks[SANDBOX_CLK_TEST_ID_I2C];
+
+	id_bkp = i2c_clk->id;
+	i2c_clk->id = id;
+	driver_data_bkp = i2c_clk->dev->driver_data;
+	i2c_clk->dev->driver_data = (ulong)i2c_clk;
+
+	ret = clk_get_by_id(id, &clkp);
+
+	i2c_clk->id = id_bkp;
+	i2c_clk->dev->driver_data = driver_data_bkp;
+
+	return ret;
+}
+
 int sandbox_clk_test_get_bulk(struct udevice *dev)
 {
 	struct sandbox_clk_test *sbct = dev_get_priv(dev);
