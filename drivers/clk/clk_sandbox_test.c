@@ -64,6 +64,32 @@ int sandbox_clk_test_get_bulk(struct udevice *dev)
 	return clk_get_bulk(dev, &sbct->bulk);
 }
 
+ulong sandbox_clk_test_get_parent_rate(struct udevice *dev)
+{
+	struct sandbox_clk_test *sbct = dev_get_priv(dev);
+	struct clk *i2c_clk, *parent_clk;
+	struct udevice *parent_bkp;
+	ulong rate;
+
+	parent_clk = &sbct->clks[SANDBOX_CLK_TEST_ID_FIXED];
+	i2c_clk = &sbct->clks[SANDBOX_CLK_TEST_ID_I2C];
+
+	parent_clk->dev->driver_data = (ulong)parent_clk;
+	parent_bkp = i2c_clk->dev->parent;
+	i2c_clk->dev->parent = parent_clk->dev;
+
+	rate = clk_get_parent_rate(i2c_clk);
+
+	i2c_clk->dev->parent = parent_bkp;
+	parent_clk->dev->driver_data = 0;
+
+	/* Check if cache'd value is correct */
+	if (parent_clk->rate != 1234)
+		return 0;
+
+	return rate;
+}
+
 ulong sandbox_clk_test_get_rate(struct udevice *dev, int id)
 {
 	struct sandbox_clk_test *sbct = dev_get_priv(dev);

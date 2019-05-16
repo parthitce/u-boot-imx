@@ -79,6 +79,14 @@ int sandbox_clk_test_get_by_id(struct udevice *dev);
  */
 int sandbox_clk_test_get_bulk(struct udevice *dev);
 /**
+ * sandbox_clk_test_get_parent_rate - Ask the sandbox clock test device to
+ * query a passed clock's parent rate.
+ *
+ * @dev:	The sandbox clock test (client) devivce.
+ * @return:	The rate of the clock
+ */
+ulong sandbox_clk_test_get_parent_rate(struct udevice *dev);
+/**
  * sandbox_clk_test_get_rate - Ask the sandbox clock test device to query a
  * clock's rate.
  *

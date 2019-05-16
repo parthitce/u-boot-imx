@@ -121,6 +121,7 @@ static int dm_test_clk(struct unit_test_state *uts)
 	ut_asserteq(0, sandbox_clk_query_enable(dev_clk, SANDBOX_CLK_ID_I2C));
 
 	ut_asserteq(0, sandbox_clk_test_get_by_id(dev_test));
+	ut_asserteq(1234, sandbox_clk_test_get_parent_rate(dev_test));
 
 	ut_assertok(sandbox_clk_test_free(dev_test));
 	return 0;
